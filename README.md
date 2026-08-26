@@ -4,6 +4,11 @@ A backend banking management system built using **Java 21** and **Spring Boot**.
 The project implements core banking operations such as customer management, account management, deposits, withdrawals, transaction history, validation, exception handling, and automated API testing.
 
 ---
+## Architecture
+
+The application follows a layered Spring Boot architecture:
+
+![V1 Architecture](./docs/v1-architecture.png)
 
 ## Version 1
 
