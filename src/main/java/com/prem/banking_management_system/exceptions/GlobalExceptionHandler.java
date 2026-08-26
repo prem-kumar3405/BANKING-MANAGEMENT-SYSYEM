@@ -1,5 +1,7 @@
 package com.prem.banking_management_system.exceptions;
 
+import org.springframework.dao.CannotAcquireLockException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -111,5 +113,19 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(CannotAcquireLockException.class)
+    public ResponseEntity<ApiErrorResponse> handleCannotAcquireLockException(
+            CannotAcquireLockException exception
+    ) {
 
+        ApiErrorResponse response = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Account was modified by another transaction. Please try again.",
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
 }
