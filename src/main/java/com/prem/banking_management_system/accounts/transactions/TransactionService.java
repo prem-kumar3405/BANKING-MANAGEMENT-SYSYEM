@@ -8,6 +8,8 @@ import com.prem.banking_management_system.exceptions.AccountNotFoundException;
 import com.prem.banking_management_system.exceptions.InsufficientBalanceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -98,8 +100,70 @@ public class TransactionService {
                 saved.getCreateAt()
         );
     }
+    @Transactional
+    public TransferResponse transfer(TransferRequest request) {
 
-    public List<TransactionResponse> getTransactionsByAccountId(Long accountId) {
+        if (request.fromAccountId().equals(request.toAccountId())) {
+            throw new IllegalArgumentException(
+                    "Source and destination accounts must be different"
+            );
+        }
+
+        Account fromAccount = accountRepository
+                .findById(request.fromAccountId())
+                .orElseThrow(() ->
+                        new AccountNotFoundException(
+                                "Source account not found"
+                        )
+                );
+
+        Account toAccount = accountRepository
+                .findById(request.toAccountId())
+                .orElseThrow(() ->
+                        new AccountNotFoundException(
+                                "Destination account not found"
+                        )
+                );
+
+        if (fromAccount.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(
+                    "Source account is not active"
+            );
+        }
+
+        if (toAccount.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccountNotActiveException(
+                    "Destination account is not active"
+            );
+        }
+
+        if (fromAccount.getBalance()
+                .compareTo(request.amount()) < 0) {
+
+            throw new InsufficientBalanceException(
+                    "Insufficient balance"
+            );
+        }
+
+        fromAccount.setBalance(
+                fromAccount.getBalance()
+                        .subtract(request.amount())
+        );
+
+        toAccount.setBalance(
+                toAccount.getBalance()
+                        .add(request.amount())
+        );
+
+        return new TransferResponse(
+                fromAccount.getId(),
+                toAccount.getId(),
+                request.amount(),
+                TransactionStatus.SUCCESS
+        );
+    }
+
+    public Page<TransactionResponse> getTransactionsByAccountId(Long accountId, Pageable pageable) {
 
         // Check whether account exists
         accountRepository.findById(accountId)
@@ -109,8 +173,7 @@ public class TransactionService {
                         ));
 
         return transactionRepository
-                .findByAccountId(accountId)
-                .stream()
+                .findByAccountId(accountId,pageable)
                 .map(transaction -> new TransactionResponse(
                         transaction.getId(),
                         transaction.getAccount().getId(),
@@ -118,7 +181,6 @@ public class TransactionService {
                         transaction.getAmount(),
                         transaction.getTransactionStatus(),
                         transaction.getCreateAt()
-                ))
-                .toList();
+                ));
     }
 }

@@ -2,11 +2,15 @@ package com.prem.banking_management_system.accounts.transactions;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -28,10 +32,27 @@ public class TransactionController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+    @PostMapping("/transfer")
+    public ResponseEntity<TransferResponse> transfer(
+            @Valid @RequestBody TransferRequest request
+    ) {
+        TransferResponse response =
+                transactionService.transfer(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
     @GetMapping("/account/{accountId}")
-    public ResponseEntity<List<TransactionResponse>> getTransactionByAccountId(@PathVariable Long accountId)
+    public ResponseEntity<Page<TransactionResponse>> getTransactionByAccountId(
+            @PathVariable Long accountId,
+            @PageableDefault(
+                    size = 20,
+                    sort = "createAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable)
     {
-        List<TransactionResponse> transactions = transactionService.getTransactionsByAccountId(accountId);
+        Page<TransactionResponse> transactions = transactionService.getTransactionsByAccountId(accountId,pageable);
 
         return ResponseEntity.ok(transactions);
     }

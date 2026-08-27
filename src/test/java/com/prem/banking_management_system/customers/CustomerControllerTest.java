@@ -28,14 +28,14 @@ public class CustomerControllerTest {
                                 .content("""
                             {
                                 "name": "Prem",
-                                  "email": "premv1test20260826@gmail.com",
+                                  "email": "premv1test202608261@gmail.com",
                                 "phone": "9876543210"
                             }
                             """)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Prem"))
-                .andExpect(jsonPath("$.email").value("premv1test20260826@gmail.com"))
+                .andExpect(jsonPath("$.email").value("premv1test202608261@gmail.com"))
                 .andExpect(jsonPath("$.phone").value("9876543210"));
     }
 
