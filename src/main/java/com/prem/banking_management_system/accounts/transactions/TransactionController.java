@@ -34,10 +34,11 @@ public class TransactionController {
     }
     @PostMapping("/transfer")
     public ResponseEntity<TransferResponse> transfer(
+           @RequestHeader("idempotency-key") String idempotencyKey,
             @Valid @RequestBody TransferRequest request
     ) {
         TransferResponse response =
-                transactionService.transfer(request);
+                transactionService.transfer(idempotencyKey,request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

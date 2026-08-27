@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final IdempotencyKeyRepository idempotencyKeyRepository;
 
     @Transactional
     public TransactionResponse deposit(DepositRequest request){
@@ -101,7 +103,23 @@ public class TransactionService {
         );
     }
     @Transactional
-    public TransferResponse transfer(TransferRequest request) {
+    public TransferResponse transfer(
+            String idempotencyKey,
+            TransferRequest request
+    ) {
+
+        Optional<IdempotencyKey> existingKey =
+                idempotencyKeyRepository
+                        .findByIdempotencyKey(idempotencyKey);
+
+        if (existingKey.isPresent()) {
+            return new TransferResponse(
+                    request.fromAccountId(),
+                    request.toAccountId(),
+                    request.amount(),
+                    TransactionStatus.SUCCESS
+            );
+        }
 
         if (request.fromAccountId().equals(request.toAccountId())) {
             throw new IllegalArgumentException(
@@ -154,6 +172,14 @@ public class TransactionService {
                 toAccount.getBalance()
                         .add(request.amount())
         );
+
+        // Save idempotency key only after successful transfer
+        IdempotencyKey key = new IdempotencyKey();
+
+        key.setIdempotencyKey(idempotencyKey);
+        key.setCreatedAt(LocalDateTime.now());
+
+        idempotencyKeyRepository.save(key);
 
         return new TransferResponse(
                 fromAccount.getId(),

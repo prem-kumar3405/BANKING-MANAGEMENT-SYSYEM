@@ -48,6 +48,7 @@ class TransferTest {
 
         TransferResponse response =
                 transactionService.transfer(
+                        "transfer-test-key-001",
                         new TransferRequest(
                                 fromAccountId,
                                 toAccountId,
@@ -100,7 +101,7 @@ class TransferTest {
 
         assertThrows(
                 AccountNotFoundException.class,
-                () -> transactionService.transfer(request)
+                () -> transactionService.transfer("transfer-rollback-test-key",request)
         );
 
         Account fromAccountAfter =
