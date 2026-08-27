@@ -163,24 +163,44 @@ public class TransactionService {
         );
     }
 
-    public Page<TransactionResponse> getTransactionsByAccountId(Long accountId, Pageable pageable) {
+    public Page<TransactionResponse> getTransactionsByAccountId(
+            Long accountId,
+            TransactionType transactionType,
+            Pageable pageable
+    ) {
 
-        // Check whether account exists
         accountRepository.findById(accountId)
                 .orElseThrow(() ->
                         new AccountNotFoundException(
                                 "Account not found"
-                        ));
+                        )
+                );
 
-        return transactionRepository
-                .findByAccountId(accountId,pageable)
-                .map(transaction -> new TransactionResponse(
+        Page<Transaction> transactions;
+
+        if (transactionType == null) {
+            transactions =
+                    transactionRepository
+                            .findByAccountId(accountId, pageable);
+        } else {
+            transactions =
+                    transactionRepository
+                            .findByAccountIdAndTransactionType(
+                                    accountId,
+                                    transactionType,
+                                    pageable
+                            );
+        }
+
+        return transactions.map(transaction ->
+                new TransactionResponse(
                         transaction.getId(),
                         transaction.getAccount().getId(),
                         transaction.getTransactionType(),
                         transaction.getAmount(),
                         transaction.getTransactionStatus(),
                         transaction.getCreateAt()
-                ));
+                )
+        );
     }
 }

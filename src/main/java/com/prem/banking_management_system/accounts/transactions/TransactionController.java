@@ -46,13 +46,16 @@ public class TransactionController {
     @GetMapping("/account/{accountId}")
     public ResponseEntity<Page<TransactionResponse>> getTransactionByAccountId(
             @PathVariable Long accountId,
+            @RequestParam(required = false)
+            TransactionType type,
+
             @PageableDefault(
                     size = 20,
                     sort = "createAt",
                     direction = Sort.Direction.DESC
             ) Pageable pageable)
     {
-        Page<TransactionResponse> transactions = transactionService.getTransactionsByAccountId(accountId,pageable);
+        Page<TransactionResponse> transactions = transactionService.getTransactionsByAccountId(accountId,type, pageable);
 
         return ResponseEntity.ok(transactions);
     }
